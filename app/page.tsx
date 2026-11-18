@@ -59,7 +59,7 @@ export default function Home() {
   }
 
   async function postDecision(url: string, body: unknown, method: "POST" | "PATCH" = "POST") {
-    const r = await api(url.replace(/^\\/api\\/v1/, ""), { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const r = await api(url.replace("/api/v1", ""), { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || "فشل حفظ القرار");
     await load();
