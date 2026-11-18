@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 type User = { id: string; email: string; displayName: string; role: string };
 type Application = { id: number; email: string; displayName: string; studioName: string; contactEmail: string; portfolioUrl: string | null; description: string; createdAt: string };
 type Upload = { id: string; title: string; slug: string; description: string; filename: string; sizeBytes: number; uploadStatus: string; scanStatus: string; reviewStatus: string; developerEmail: string; developerName: string };
-type ModerationItem = { id: number; gameSlug: string; displayName: string; body?: string; reviewText?: string; rating?: number; reason?: string; details?: string };
+type ModerationItem = { id: number; gameSlug: string; displayName: string; body?: string; reviewText?: string; rating?: number; reason?: string; details?: string };\ntype AuditItem = { id:number; action:string; entityType:string; entityId:string; actorName:string; createdAt:string };
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
@@ -13,7 +13,7 @@ export default function Home() {
   const [password, setPassword] = useState("");
   const [applications, setApplications] = useState<Application[]>([]);
   const [uploads, setUploads] = useState<Upload[]>([]);
-  const [moderation, setModeration] = useState<{comments:ModerationItem[];reviews:ModerationItem[];reports:ModerationItem[]}>({comments:[],reviews:[],reports:[]});
+  const [moderation, setModeration] = useState<{comments:ModerationItem[];reviews:ModerationItem[];reports:ModerationItem[]}>({comments:[],reviews:[],reports:[]});\n  const [audit, setAudit] = useState<AuditItem[]>([]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -21,14 +21,14 @@ export default function Home() {
     const me = await fetch("/api/v1/auth/me", { cache: "no-store" }).then(r => r.json());
     if (!me.user || me.user.role !== "admin") { setUser(null); return; }
     setUser(me.user);
-    const [a, u, m] = await Promise.all([
+    const [a, u, m, log] = await Promise.all([
       fetch("/api/v1/admin/developer-applications", { cache: "no-store" }).then(r => r.json()),
       fetch("/api/v1/admin/game-uploads", { cache: "no-store" }).then(r => r.json()),
       fetch("/api/v1/admin/moderation", { cache: "no-store" }).then(r => r.json())
     ]);
     setApplications(a.applications ?? []);
     setUploads(u.uploads ?? []);
-    setModeration({comments:m.comments??[],reviews:m.reviews??[],reports:m.reports??[]});
+    setModeration({comments:m.comments??[],reviews:m.reviews??[],reports:m.reports??[]});\n    setAudit(log.logs??[]);
   }, []);
 
   useEffect(() => { load().catch(() => setMessage("تعذر الاتصال بالخادم")); }, [load]);
@@ -104,6 +104,9 @@ export default function Home() {
       <h3>التقييمات</h3>{moderation.reviews.map(item=><article className="card" key={"r"+item.id}><b>{item.displayName} · {item.gameSlug} · {item.rating}/5</b><p>{item.reviewText||"بدون نص"}</p><div className="actions"><button onClick={()=>decideModeration("review",item.id,"approve")} disabled={busy}>موافقة</button><button className="danger" onClick={()=>decideModeration("review",item.id,"reject")} disabled={busy}>رفض</button></div></article>)}
       <h3>البلاغات</h3>{moderation.reports.map(item=><article className="card" key={"p"+item.id}><b>{item.displayName} · {item.gameSlug} · {item.reason}</b><p>{item.details}</p><div className="actions"><button onClick={()=>decideModeration("report",item.id,"resolve")} disabled={busy}>تمت المعالجة</button><button className="danger" onClick={()=>decideModeration("report",item.id,"dismiss")} disabled={busy}>إغلاق دون إجراء</button></div></article>)}
       {!moderation.comments.length&&!moderation.reviews.length&&!moderation.reports.length&&<p className="empty">لا توجد عناصر إشراف معلّقة.</p>}
+    </section>
+    <section className="section"><div className="section-head"><h2>سجل العمليات الإدارية</h2><span>{audit.length} عملية</span></div>
+      {audit.length===0?<p className="empty">لا توجد عمليات مسجلة بعد.</p>:audit.map(item=><article className="card audit-row" key={item.id}><b>{item.actorName} · {item.action}</b><span>{item.entityType} #{item.entityId}</span><small>{new Date(item.createdAt).toLocaleString("ar")}</small></article>)}
     </section>
     <footer>GameVerse Admin · كل قرارات الاعتماد تنفذ على الخادم مع التحقق من الصلاحيات وتسجيلها.</footer>
   </main>;
