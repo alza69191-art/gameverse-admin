@@ -53,8 +53,8 @@ export default function Home() {
     finally { setBusy(false); }
   }
 
-  async function postDecision(url: string, body: unknown) {
-    const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  async function postDecision(url: string, body: unknown, method: "POST" | "PATCH" = "POST") {
+    const r = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || "فشل حفظ القرار");
     await load();
@@ -91,7 +91,7 @@ export default function Home() {
     const notes=window.prompt(status==="suspended"?"سبب التعليق":"ملاحظات إعادة التفعيل");
     if(notes===null)return;
     setBusy(true);
-    try{await postDecision(`/api/v1/admin/users/${id}/status`,{status,notes});}
+    try{await postDecision(`/api/v1/admin/users/${id}/status`,{status,notes},"PATCH");}
     catch(e){setMessage(e instanceof Error?e.message:"حدث خطأ");}
     finally{setBusy(false);}
   }
