@@ -9,6 +9,11 @@ type ModerationItem = { id: number; gameSlug: string; displayName: string; body?
 type AuditItem = { id:number; action:string; entityType:string; entityId:string; actorName:string; createdAt:string };
 type AdminUser = { id:string; email:string; displayName:string; role:string; status:string; createdAt:string };
 
+const PLATFORM_API = (process.env.NEXT_PUBLIC_PLATFORM_API_URL || "https://gameverse-platform-drdc.onrender.com/api/v1").replace(/\\/$/, "");
+async function api(path: string, init?: RequestInit) {
+  return fetch(PLATFORM_API + path, { ...init, credentials: "include", cache: "no-store" });
+}
+
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [email, setEmail] = useState("");
@@ -22,15 +27,15 @@ export default function Home() {
   const [message, setMessage] = useState("");
 
   const load = useCallback(async () => {
-    const me = await fetch("/api/v1/auth/me", { cache: "no-store" }).then(r => r.json());
+    const me = await api("/auth/me", { cache: "no-store" }).then(r => r.json());
     if (!me.user || me.user.role !== "admin") { setUser(null); return; }
     setUser(me.user);
     const [a, u, m, log, people] = await Promise.all([
-      fetch("/api/v1/admin/developer-applications", { cache: "no-store" }).then(r => r.json()),
-      fetch("/api/v1/admin/game-uploads", { cache: "no-store" }).then(r => r.json()),
-      fetch("/api/v1/admin/moderation", { cache: "no-store" }).then(r => r.json()),
-      fetch("/api/v1/admin/audit", { cache: "no-store" }).then(r => r.json()),
-      fetch("/api/v1/admin/users", { cache: "no-store" }).then(r => r.json())
+      api("/admin/developer-applications", { cache: "no-store" }).then(r => r.json()),
+      api("/admin/game-uploads", { cache: "no-store" }).then(r => r.json()),
+      api("/admin/moderation", { cache: "no-store" }).then(r => r.json()),
+      api("/admin/audit", { cache: "no-store" }).then(r => r.json()),
+      api("/admin/users", { cache: "no-store" }).then(r => r.json())
     ]);
     setApplications(a.applications ?? []);
     setUploads(u.uploads ?? []);
@@ -44,10 +49,10 @@ export default function Home() {
   async function login(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setMessage("");
     try {
-      const r = await fetch("/api/v1/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
+      const r = await api("/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || "فشل تسجيل الدخول");
-      if (data.user?.role !== "admin") { await fetch("/api/v1/auth/logout", { method: "POST" }); throw new Error("هذا الحساب ليس حساب مدير"); }
+      if (data.user?.role !== "admin") { await api("/auth/logout", { method: "POST" }); throw new Error("هذا الحساب ليس حساب مدير"); }
       await load();
     } catch (e) { setMessage(e instanceof Error ? e.message : "حدث خطأ"); }
     finally { setBusy(false); }
@@ -97,7 +102,7 @@ export default function Home() {
   }
 
   async function logout() {
-    await fetch("/api/v1/auth/logout", { method: "POST" });
+    await api("/auth/logout", { method: "POST" });
     setUser(null);
   }
 
