@@ -118,7 +118,7 @@ export default function Home() {
   if (!user) return <main className="login-shell"><section className="login-card"><div className="eyebrow">GAMEVERSE · CONTROL ROOM</div><h1>دخول الإدارة</h1><p>هذه البوابة مخصصة لحسابات الإدارة المعتمدة فقط.</p><form onSubmit={login}><label>البريد الإلكتروني<input type="email" autoComplete="username" required value={email} onChange={e=>setEmail(e.target.value)} /></label><label>كلمة المرور<input type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)} /></label><button disabled={busy}>{busy ? "جارٍ التحقق..." : "تسجيل الدخول"}</button></form>{message && <div className="notice">{message}</div>}</section></main>;
 
   return <main className="shell">
-    <header className="top"><a className="brand" href="/">GameVerse Admin</a><div><span>{user.displayName}</span><button className="ghost" onClick={logout}>خروج</button></div></header>
+    <header className="top"><a className="brand" href="/">GameVerse Admin</a><a href="/catalog">مراجعة طلبات التطبيقات والمواقع ↗</a><div><span>{user.displayName}</span><button className="ghost" onClick={logout}>خروج</button></div></header>
     <section className="intro"><div className="eyebrow">ADMINISTRATION</div><h1>مركز إدارة المنصة</h1><p>إدارة المطورين والملفات المحجوزة والمراجعة المجتمعية.</p></section>
     {message && <div className="notice">{message}</div>}
     <section className="section"><div className="section-head"><h2>طلبات اعتماد المطورين</h2><span>{applications.length} طلب</span></div>
