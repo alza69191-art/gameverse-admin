@@ -9,9 +9,8 @@ type ModerationItem = { id: number; gameSlug: string; displayName: string; body?
 type AuditItem = { id:number; action:string; entityType:string; entityId:string; actorName:string; createdAt:string };
 type AdminUser = { id:string; email:string; displayName:string; role:string; status:string; createdAt:string };
 
-const PLATFORM_API = (process.env.NEXT_PUBLIC_PLATFORM_API_URL || "https://gameverse-platform-drdc.onrender.com/api/v1");
 async function api(path: string, init?: RequestInit) {
-  return fetch(PLATFORM_API + path, { ...init, credentials: "include", cache: "no-store" });
+  return fetch("/api/v1" + path, { ...init, credentials: "same-origin", cache: "no-store" });
 }
 
 export default function Home() {
