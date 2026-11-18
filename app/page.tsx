@@ -101,6 +101,16 @@ export default function Home() {
     finally{setBusy(false);}
   }
 
+  async function setUserRole(id:string,role:"player"|"developer"|"admin") {
+    const notes=window.prompt("سبب تغيير الصلاحية (مطلوب للتدقيق)");
+    if(notes===null || !notes.trim())return;
+    if(!window.confirm("تأكيد تغيير صلاحية هذا الحساب إلى "+role+"؟"))return;
+    setBusy(true);
+    try{await postDecision(`/api/v1/admin/users/${id}/role`,{role,notes},"PATCH");}
+    catch(e){setMessage(e instanceof Error?e.message:"حدث خطأ");}
+    finally{setBusy(false);}
+  }
+
   async function logout() {
     await api("/auth/logout", { method: "POST" });
     setUser(null);
@@ -125,7 +135,7 @@ export default function Home() {
       {!moderation.comments.length&&!moderation.reviews.length&&!moderation.reports.length&&<p className="empty">لا توجد عناصر إشراف معلّقة.</p>}
     </section>
     <section className="section"><div className="section-head"><h2>إدارة المستخدمين</h2><span>{users.length} حساب</span></div>
-      {users.length===0?<p className="empty">لا توجد حسابات أو تعذر تحميلها.</p>:users.map(person=><article className="card user-row" key={person.id}><div><b>{person.displayName}</b><p className="muted">{person.email} · {person.role} · {person.status}</p></div>{person.role!=="admin"&&<button className={person.status==="suspended"?"":"danger"} onClick={()=>setUserStatus(person.id,person.status==="suspended"?"active":"suspended")} disabled={busy}>{person.status==="suspended"?"إعادة التفعيل":"تعليق الحساب"}</button>}</article>)}
+      {users.length===0?<p className="empty">لا توجد حسابات أو تعذر تحميلها.</p>:users.map(person=><article className="card user-row" key={person.id}><div><b>{person.displayName}</b><p className="muted">{person.email} · {person.role} · {person.status}</p></div>{person.role!=="admin"&&<><select aria-label="تغيير الصلاحية" value={person.role} onChange={e=>setUserRole(person.id,e.target.value as "player"|"developer"|"admin")} disabled={busy}><option value="player">لاعب</option><option value="developer">مطوّر</option><option value="admin">مشرف</option></select><button className={person.status==="suspended"?"":"danger"} onClick={()=>setUserStatus(person.id,person.status==="suspended"?"active":"suspended")} disabled={busy}>{person.status==="suspended"?"إعادة التفعيل":"تعليق الحساب"}</button></>}</article>)}
     </section>
     <section className="section"><div className="section-head"><h2>سجل العمليات الإدارية</h2><span>{audit.length} عملية</span></div>
       {audit.length===0?<p className="empty">لا توجد عمليات مسجلة بعد.</p>:audit.map(item=><article className="card audit-row" key={item.id}><b>{item.actorName} · {item.action}</b><span>{item.entityType} #{item.entityId}</span><small>{new Date(item.createdAt).toLocaleString("ar")}</small></article>)}
